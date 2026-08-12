@@ -1,0 +1,17 @@
+# Without this, `COPY . .` drops the host's node_modules on top of the one
+# `npm ci` just built. Files copied from Windows carry no exec bit, so the
+# vite binary lands non-executable and the build dies with
+# "sh: vite: Permission denied" (exit 126).
+node_modules
+dist
+
+.git
+.github
+.gitignore
+.dockerignore
+.claude
+
+# Not needed to build the image
+docs
+scripts
+*.md
