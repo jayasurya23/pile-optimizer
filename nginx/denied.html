@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Access denied — Castillo Engineering</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        color: #333132;
+        font-family: "Jost", system-ui, sans-serif;
+      }
+      .card {
+        max-width: 30rem;
+        padding: 2rem;
+        border: 1px solid #bcbec0;
+        border-left: 5px solid #ad1f2b;
+        border-radius: 0.4rem;
+      }
+      h1 { margin: 0 0 0.75rem; font-size: 1.3rem; color: #ad1f2b; }
+      p { line-height: 1.6; color: #4d4d4f; }
+      a { color: #ad1f2b; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Access denied</h1>
+      <p>
+        The Pile Plan Optimizer is limited to Castillo Engineering staff accounts
+        (<code>@castillope.com</code>). Guest and partner accounts cannot open it.
+      </p>
+      <!-- Without this, a denied user is trapped: the browser holds a live SSO
+           session, so retrying silently re-authenticates and re-denies, which
+           reads as "the site is broken". /.auth/* is served by the auth sidecar
+           and never reaches nginx, so this link works from behind the 403. -->
+      <p>
+        <a href="/.auth/logout?post_logout_redirect_uri=%2F"
+          >Sign out and try a different account</a
+        >
+      </p>
+      <p>If you are staff and seeing this, ask IT to add you to
+        <code>SG-Castillo-Internal-Apps</code>.</p>
+    </div>
+  </body>
+</html>

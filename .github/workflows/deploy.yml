@@ -1,41 +1,127 @@
-name: build & deploy
+name: Deploy to Azure Container Apps
+
+# Push-to-deploy: merge to main -> build the image inside Azure Container Registry
+# -> roll out a new Container Apps revision. No Docker on the runner, no stored
+# passwords (OIDC federated credentials), rollback by pointing the app at an
+# earlier git-SHA tag. Same shape as the pmo360 pipeline.
+#
+# Required GitHub config (Settings -> Secrets and variables -> Actions):
+#   Secrets:
+#     AZURE_CLIENT_ID          # github-pile-optimizer-deploy app registration
+#     AZURE_TENANT_ID
+#     AZURE_SUBSCRIPTION_ID
+#   Variables:
+#     AZURE_RESOURCE_GROUP     # rg-pile-optimizer
+#     ACR_NAME                 # castillopileoptimizeracr (no .azurecr.io)
+#     CONTAINER_APP_NAME       # pile-optimizer
+#     AUTH_GROUP_ID            # object id of SG-Castillo-Internal-Apps
+#
+# Until those exist the build job still runs, so a broken build is caught on
+# every push; only the Azure steps are skipped.
 
 on:
   push:
     branches: [main]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.js"
+      - "Dockerfile"
+      - "nginx/**"
+      - ".github/workflows/deploy.yml"
   pull_request:
     branches: [main]
-  workflow_dispatch:
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write # required for azure/login OIDC
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false # never abort a deploy mid-rollout
+
+env:
+  IMAGE_REPO: pile-optimizer
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
 
+      # Build on the runner too, even though az acr build rebuilds in Azure.
+      # It is the fast fail: a broken build shows up here in ~30s instead of
+      # after an ACR round trip, and it gates pull requests.
       - run: npm ci
       - run: npm run build
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && vars.CONTAINER_APP_NAME != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
-      # Deploys only once AZURE_STATIC_WEB_APPS_API_TOKEN exists as a repo
-      # secret (Static Web App -> Manage deployment token). Until then the job
-      # above still builds, so a broken build is caught on every push.
-      - name: Deploy to Azure Static Web Apps
-        if: github.event_name == 'push' && env.SWA_TOKEN != ''
-        env:
-          SWA_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-        uses: Azure/static-web-apps-deploy@v1
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: upload
-          app_location: "dist"
-          skip_app_build: true
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build image in ACR
+        run: |
+          az acr build \
+            --registry "${{ vars.ACR_NAME }}" \
+            --image "${IMAGE_REPO}:${{ github.sha }}" \
+            --image "${IMAGE_REPO}:latest" \
+            .
+
+      - name: Deploy new revision
+        run: |
+          az containerapp update \
+            --name "${{ vars.CONTAINER_APP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ vars.ACR_NAME }}.azurecr.io/${IMAGE_REPO}:${{ github.sha }}" \
+            --cpu 0.25 --memory 0.5Gi \
+            --min-replicas 0 --max-replicas 2
+
+      # The access gate lives in Azure config, not in this repo, so nothing here
+      # would notice it being dropped. `az containerapp auth update --set` is
+      # lossy: an unrelated --set months from now silently removes allowedGroups
+      # and re-admits all 91 B2B guests, with the app still working perfectly for
+      # staff. This asserts it on every deploy.
+      - name: Assert access control is still in place
+        run: |
+          cfg=$(az containerapp auth show \
+            --name "${{ vars.CONTAINER_APP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" -o json)
+
+          [ "$(jq -r '.platform.enabled' <<<"$cfg")" = "true" ] \
+            || { echo "::error::EasyAuth is disabled"; exit 1; }
+
+          [ "$(jq -r '.globalValidation.unauthenticatedClientAction' <<<"$cfg")" = "RedirectToLoginPage" ] \
+            || { echo "::error::unauthenticatedClientAction drifted"; exit 1; }
+
+          [ "$(jq -r '.globalValidation.excludedPaths // [] | length' <<<"$cfg")" = "0" ] \
+            || { echo "::error::excludedPaths is non-empty — the auth sidecar is being bypassed"; exit 1; }
+
+          [ "$(jq -r '.identityProviders.azureActiveDirectory.validation.jwtClaimChecks.allowedGroups[0] // ""' <<<"$cfg")" = "${{ vars.AUTH_GROUP_ID }}" ] \
+            || { echo "::error::GROUP CHECK MISSING — all 91 guest accounts can sign in"; exit 1; }
+
+      - name: Show rollout
+        run: |
+          az containerapp revision list \
+            --name "${{ vars.CONTAINER_APP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query "[?properties.active].{revision:name,created:properties.createdTime,traffic:properties.trafficWeight}" \
+            -o table

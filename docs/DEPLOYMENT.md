@@ -23,7 +23,7 @@ no CDN, and no Static Web App anywhere in the tenant.
 | Environment | `pile-optimizer-env` |
 | Registry | `castillopileoptimizeracr` (Basic) |
 | Container app | `pile-optimizer` |
-| Hostname | `pile.castillope.com` |
+| Hostname | **`civiltools.castillope.com`** |
 | Size | 0.25 vCPU / 0.5 GiB |
 | Auth | EasyAuth, single-tenant, staff security group |
 
@@ -52,23 +52,55 @@ the user's machine.
 ~$35/month to solve a problem nobody has. The house convention is already a
 subdomain per app, and nothing in the estate uses path-based routing.
 
+## Container layout
+
+| File | What it does |
+|---|---|
+| `Dockerfile` | node:20-alpine build → `nginx-unprivileged` (UID 101, port 8080) |
+| `nginx/default.conf` | SPA fallback, cache policy, `/healthz`, EasyAuth tripwire |
+| `nginx/snippets/require-easyauth.conf` | fails closed if the auth sidecar is missing |
+| `nginx/snippets/security-headers.conf` | CSP allowing only the two Google Fonts hosts |
+| `nginx/denied.html` | 403 page with a working sign-out link |
+
+Cache policy matches Vite's output: `index.html` is `no-cache` (it names the
+content-hashed bundles, so a stale copy points at assets that no longer exist),
+`/assets/*` is `immutable` for a year.
+
+`/healthz` deliberately bypasses the tripwire — Container Apps probes hit the
+container port directly and carry no EasyAuth headers, so gating it would stop
+any revision reaching Healthy.
+
+## Access control
+
+The gate is **not** in this repo. It is an Entra security group checked by the
+Container Apps auth sidecar (`jwtClaimChecks.allowedGroups`). The nginx tripwire
+only fails closed if that sidecar is removed from the request path, and matches
+on header *presence*, never value. The reasoning — including why a
+`@castillope.com` domain check is unsafe as the gate — is in
+`docs/ACCESS_CONTROL.md` in the `structcalc` repo.
+
+The deploy workflow asserts the group check on every run, because
+`az containerapp auth update --set` is lossy and can silently drop it.
+
 ## CI/CD
 
-The committed `.github/workflows/deploy.yml` is still the **Static Web Apps**
-version and must be replaced with the house pattern — GitHub OIDC →
-`az acr build` → `az containerapp update` with a git-SHA image tag — before first
-deploy. The replacement workflow, the `Dockerfile`, and the `nginx.conf` are all
-specified in the runbook (§5, "Files to add"). They are not committed yet because
-the Azure resources they target do not exist.
+`.github/workflows/deploy.yml` follows the house pattern: GitHub OIDC →
+`az acr build` → `az containerapp update` with a git-SHA image tag. The Static
+Web Apps version it replaced needed a long-lived deployment token, which
+contradicts the org's no-stored-secrets rule.
 
 Deploy = push to `main`. Roll back = point the app at an earlier SHA tag.
 
+The build job runs on every push and pull request; the Azure steps are skipped
+until the repo variables exist, so a broken build is caught even before the
+infrastructure does.
+
 ## Blocking on
 
-1. Confirmation of the hostname `pile.castillope.com`.
-2. Two DNS records created by whoever administers `castillope.com` (it is **not**
-   in Azure DNS): a `CNAME` for `pile` and a `TXT` at `asuid.pile`. Exact values in
-   the runbook §4.7.
-3. A staff security group to scope access, and an owner for its membership.
-
-Nothing has been provisioned. See the runbook for the ordered command list.
+1. **Go-ahead to provision** — nothing exists in Azure yet.
+2. **One DNS record**, added by the user in Squarespace once the app exists:
+   a `CNAME` at `civiltools` pointing to the container app's ingress FQDN.
+   No `asuid` TXT is needed — `qc.` and `pmo360.` both validated by CNAME alone
+   and neither has one.
+3. The `SG-Castillo-Internal-Apps` security group, and an owner for its
+   membership.
