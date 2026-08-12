@@ -1,0 +1,88 @@
+# Pile Plan Optimizer — Castillo Engineering (Civil)
+
+Terrain-following pile plan optimizer for utility-scale solar: N–S torque tube
+on flex joints. **Import an Excel file, adjust the sliders, export the results.**
+
+Fully client-side — no server, no upload. The pile data never leaves the
+browser, which is also why it deploys as static files.
+
+## What it does
+
+For each tracker row it finds the torque-tube position that satisfies every
+constraint at once:
+
+1. **Straight line** — if a single grade fits the reveal window, use it (no earthwork).
+2. **Terrain follow, no grade** — otherwise find the smoothest tube (minimum
+   flex-joint rotation, ADMM with a direct Cholesky solve) that keeps every
+   reveal inside its box without touching the ground.
+3. **Terrain follow with grade** — if terrain slope itself breaks the limits,
+   follow the terrain with slope/delta clamping, then rotate and shift the tube
+   to balance cut against fill within the row.
+
+A **global site solve** then couples all trackers, enforcing N–S end-elevation
+limits and E–W band slopes across neighbouring rows jointly rather than row by row.
+
+## Input format
+
+`.xlsx` (first sheet with the required headers) or `.csv`. Column names are
+case-insensitive.
+
+| Column | Required | Meaning |
+|---|---|---|
+| `TrackerID` | yes | groups piles into a tracker row |
+| `Northing` | yes | ft |
+| `Easting` | no | ft — needed for E–W adjacency checks |
+| `ExistingGround` | yes | ft |
+| `MinReveal` | no | ft above EG — per-pile hard lower bound |
+| `MaxReveal` | no | ft above EG — per-pile hard upper bound |
+
+`MinReveal`/`MaxReveal` **override the sliders** for those piles. If absent, the
+global slider values apply to every pile.
+
+`public/sample-pile-data.xlsx` (180 piles, 12 trackers) ships as a format
+template — regenerate with `python scripts/make_sample_data.py`.
+
+## Output
+
+`TrackerOptimization_Results.xlsx`, three sheets:
+
+- **Optimization Results** — one row per pile (N→S within each tracker):
+  coordinates, existing ground, top of pile, reveal, solution type, final finished
+  grade, ground adjustment, cut/fill, tube slope, slope delta.
+- **Tracker Ends** — north and south end TOP per tracker. The tube is fully
+  defined by its two ends, which is what the downstream CAD workflow wants.
+- **Design Parameters** — the constraint snapshot the run used, plus fleet totals.
+
+## Local development
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # -> dist/ (static, deploy anywhere)
+```
+
+Requires Node 18+. SheetJS comes from the vendor's own registry rather than the
+npm mirror (the npm copy is stale and carries advisories).
+
+## Deployment
+
+`npm run build` emits a self-contained `dist/` — plain static files, no runtime.
+`vite.config.js` sets `base: "./"` so the same build works from any sub-path
+without rebuilding.
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for how this sits alongside the
+structural tool on one Castillo site behind Entra ID.
+
+## Changes from the v1.1 source
+
+The optimizer's numerical engine is untouched. Packaging fixed three defects in
+the data path and the export, plus the UI contrast — all recorded with evidence
+in [`docs/FINDINGS.md`](docs/FINDINGS.md):
+
+1. Per-pile `MinReveal`/`MaxReveal` were silently ignored on `.xlsx` import
+   (they worked for `.csv`), so Excel runs quietly used the sliders instead.
+2. The exported **Tube Slope** and **Slope Delta** columns were blank on every
+   row — the two governing geometry checks the tool exists to enforce.
+3. The Fleet Summary method breakdown always read 0/0/0 after a global solve.
+4. The UI was a dark theme recoloured onto white; help text sat at 1.61:1
+   contrast. Now Castillo-branded at WCAG AA.

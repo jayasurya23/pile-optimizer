@@ -1,0 +1,41 @@
+name: build & deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      # Deploys only once AZURE_STATIC_WEB_APPS_API_TOKEN exists as a repo
+      # secret (Static Web App -> Manage deployment token). Until then the job
+      # above still builds, so a broken build is caught on every push.
+      - name: Deploy to Azure Static Web Apps
+        if: github.event_name == 'push' && env.SWA_TOKEN != ''
+        env:
+          SWA_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: "dist"
+          skip_app_build: true
