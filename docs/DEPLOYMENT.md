@@ -1,91 +1,74 @@
-# Deployment — two separate tools, one Castillo site
+# Deployment — civil pile optimizer
 
-The civil and structural tools stay **independent applications**: separate repos,
-separate build pipelines, separate release cadence. Neither can break the other.
-They share only a hostname and the sign-in.
+> **Supersedes the earlier draft of this file.** That draft recommended Azure
+> Static Web Apps behind Front Door. That was written before the Azure estate was
+> inspected and is **wrong for this organisation** — see "Why not Static Web Apps"
+> below. The authoritative, adversarially-reviewed plan covering **both** the civil
+> and structural tools is `docs/AZURE_DEPLOYMENT.md` in the `structcalc` repo.
 
-| | Civil — Pile Plan Optimizer | Structural — Calc Tool |
-|---|---|---|
-| Repo | `pile-optimizer` | `structcalc` |
-| Stack | React SPA, **fully client-side** | Python / Streamlit, server-side |
-| Artifact | `dist/` — static files | container / App Service app |
-| Needs a server? | **No** | Yes (plus PostgreSQL) |
-| Cost to host | ~free | App Service plan + DB |
+## The decision
 
-The asymmetry matters: the civil tool does all its work in the browser, so it
-wants static hosting, not an App Service.
+`pile-optimizer` ships as a **Docker container on Azure Container Apps** running
+nginx over the static Vite `dist/`, at **`pile.castillope.com`**, behind Container
+Apps built-in auth (EasyAuth) against Entra ID.
 
-## Recommended — one hostname, path routing (Azure Front Door)
+This matches what Castillo already operates. Every web-facing app in the
+subscription is a Container App with its own resource group, its own registry, and
+its own subdomain on `castillope.com` (`qc.`, `pmo360.`). There is no Front Door,
+no CDN, and no Static Web App anywhere in the tenant.
 
-```
-                          apps.castilloeng.com
-                                   │
-                        ┌─── Azure Front Door ───┐
-                        │                        │
-              /civil/*  │                        │  /structural/*
-                        ▼                        ▼
-        Static Web App (or Storage       App Service (Linux)
-        static website)                  Streamlit + Easy Auth
-        civil dist/                      structcalc
-```
+| | |
+|---|---|
+| Resource group | `rg-pile-optimizer` (East US 2) |
+| Environment | `pile-optimizer-env` |
+| Registry | `castillopileoptimizeracr` (Basic) |
+| Container app | `pile-optimizer` |
+| Hostname | `pile.castillope.com` |
+| Size | 0.25 vCPU / 0.5 GiB |
+| Auth | EasyAuth, single-tenant, staff security group |
 
-- **One URL** for the team; a landing page at `/` links to both tools.
-- **Independent deploys** — pushing civil never redeploys structural.
-- **Entra ID once**: Easy Auth on the App Service, built-in Entra auth on the
-  Static Web App, both restricted to the tenant. Front Door forwards the session.
-- Front Door Standard is roughly $35/month plus trivial traffic charges.
+The app stays 100% client-side. The container only serves files — parsing,
+optimization and export all still happen in the browser, and no pile data leaves
+the user's machine.
 
-## Cheaper alternative — two subdomains
+## Why not Static Web Apps
 
-`civil.castilloeng.com` → Static Web App, `structural.castilloeng.com` →
-App Service. No Front Door, so no extra spend, and everything else is identical.
-The only thing lost is a single shared path prefix. **If cost matters more than
-having one hostname, take this option.**
+- **SWA Free cannot restrict sign-in to this tenant.** Tenant-restricted Entra
+  sign-in needs a custom auth provider, which is a Standard-tier feature
+  (~$9/app/month). The Free tier's built-in Entra provider accepts any Microsoft
+  account.
+- **It cannot express the group claim we need.** The tenant has 106 members *and
+  91 guests across 36 external domains* — including a racking supplier and five
+  gmail.com accounts. "All staff" has to mean a security-group check, which
+  Container Apps EasyAuth does via `jwtClaimChecks.allowedGroups` and SWA does not.
+- **It needs a long-lived deployment token.** Castillo's CI standard is GitHub
+  OIDC federated credentials with no stored secrets. `AZURE_STATIC_WEB_APPS_API_TOKEN`
+  contradicts that.
+- **It fragments operations.** One hosting model, one auth model, one deploy
+  pattern is worth more to a team this size than saving a few dollars a month.
 
-## Not recommended — folding civil into the Streamlit app
+## Why not Front Door / path routing
 
-Streamlit can serve the React build from its `static/` directory and show it in
-an iframe. It works, but it couples the two teams' release cycles, puts a
-client-side tool behind a server that does nothing for it, and inherits
-Streamlit's iframe sandbox for the export download. Only worth it if the org
-refuses to run a second hosting resource.
+~$35/month to solve a problem nobody has. The house convention is already a
+subdomain per app, and nothing in the estate uses path-based routing.
 
-## Civil app — what deploying it actually takes
+## CI/CD
 
-```bash
-npm ci
-npm run build     # -> dist/
-```
+The committed `.github/workflows/deploy.yml` is still the **Static Web Apps**
+version and must be replaced with the house pattern — GitHub OIDC →
+`az acr build` → `az containerapp update` with a git-SHA image tag — before first
+deploy. The replacement workflow, the `Dockerfile`, and the `nginx.conf` are all
+specified in the runbook (§5, "Files to add"). They are not committed yet because
+the Azure resources they target do not exist.
 
-Upload `dist/` anywhere that serves static files. `base: "./"` in
-`vite.config.js` keeps asset URLs relative, so the same build works at `/`,
-`/civil/`, or `/civil/pile-optimizer/` with no rebuild.
+Deploy = push to `main`. Roll back = point the app at an earlier SHA tag.
 
-A GitHub Actions workflow is committed at
-`.github/workflows/deploy.yml` — it builds on every push to `main` and uploads
-to Azure Static Web Apps. It needs one repository secret,
-`AZURE_STATIC_WEB_APPS_API_TOKEN`, from the Static Web App's **Manage deployment
-token** blade. Until that secret exists the workflow builds and stops, which is
-harmless.
+## Blocking on
 
-## To provision this, I need from you
+1. Confirmation of the hostname `pile.castillope.com`.
+2. Two DNS records created by whoever administers `castillope.com` (it is **not**
+   in Azure DNS): a `CNAME` for `pile` and a `TXT` at `asuid.pile`. Exact values in
+   the runbook §4.7.
+3. A staff security group to scope access, and an owner for its membership.
 
-1. Which option — Front Door (one hostname) or two subdomains.
-2. Azure subscription access, and the resource group / region to use.
-3. The DNS zone (who manages `castilloeng.com` records).
-4. The Entra tenant ID and whether access is all-staff or a security group.
-5. For structural only: whether to stand up Azure Database for PostgreSQL now or
-   keep the SQLite fallback for the first pilot.
-
-With 1–4 I can provision both, wire the auth, and hand back working URLs.
-
-## Security notes
-
-- The civil tool sends **no data anywhere** — file parsing, optimization and
-  export all happen in the browser. Nothing to secure beyond the sign-in.
-- The structural tool stores project payloads in its database; that is the only
-  place client data comes to rest.
-- Neither app implements authentication itself. Both rely on the platform
-  (Easy Auth / Static Web Apps auth). Do not expose either origin publicly
-  without that in front of it — if Front Door is used, lock the origins to
-  accept traffic only from it.
+Nothing has been provisioned. See the runbook for the ordered command list.
