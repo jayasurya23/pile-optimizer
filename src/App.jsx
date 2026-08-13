@@ -487,7 +487,7 @@ function ElevChart({piles,results,adjPiles,adjResults,adjLabel,adjSide}){
   const yRange=maxE-minE,step=yRange<1?0.25:yRange<3?0.5:yRange<8?1:2;
   const yTicks=[];for(let v=Math.ceil(minE/step)*step;v<=maxE;v=Math.round((v+step)*1e4)/1e4)yTicks.push(v);
   return(
-    <svg width={W} height={H} style={{fontFamily:"'DM Mono',monospace",overflow:"visible"}}>
+    <svg width={W} height={H} style={{overflow:"visible"}}>
       {yTicks.map(t=>(
         <g key={t}>
           <line x1={P.l} y1={yS(t)+P.t} x2={P.l+cW} y2={yS(t)+P.t} stroke="#e2e3e5" strokeWidth="0.5"/>
@@ -524,8 +524,8 @@ function ElevChart({piles,results,adjPiles,adjResults,adjLabel,adjSide}){
           stroke="#ffffff" strokeWidth="1"/>
       ))}
       {/* Axes */}
-      <line x1={P.l} y1={P.t} x2={P.l} y2={P.t+cH} stroke="#5f6165" strokeWidth="1"/>
-      <line x1={P.l} y1={P.t+cH} x2={P.l+cW} y2={P.t+cH} stroke="#5f6165" strokeWidth="1"/>
+      <line x1={P.l} y1={P.t} x2={P.l} y2={P.t+cH} stroke="#4d4d4f" strokeWidth="1"/>
+      <line x1={P.l} y1={P.t+cH} x2={P.l+cW} y2={P.t+cH} stroke="#4d4d4f" strokeWidth="1"/>
       <text x={P.l+cW/2} y={H-5} textAnchor="middle" fontSize="9" fill="#4d4d4f">← South · Northing · North →</text>
       <text x={11} y={P.t+cH/2} textAnchor="middle" fontSize="9" fill="#4d4d4f" transform={`rotate(-90,11,${P.t+cH/2})`}>Elev (ft)</text>
       {/* Gap zone */}
@@ -577,8 +577,8 @@ function SlopeChart({results,maxSlope,maxSlopeDelta}){
   const zero=yS(0);
   const poly=pts=>pts.map((p,i)=>`${i===0?"M":"L"}${xS(p.n)},${yS(p.v)}`).join(" ");
   return(
-    <svg width={W} height={H} style={{fontFamily:"'DM Mono',monospace",overflow:"visible"}}>
-      <line x1={P.l} y1={zero} x2={P.l+cW} y2={zero} stroke="#6d6f73" strokeWidth="1"/>
+    <svg width={W} height={H} style={{overflow:"visible"}}>
+      <line x1={P.l} y1={zero} x2={P.l+cW} y2={zero} stroke="#4d4d4f" strokeWidth="1"/>
       <line x1={P.l} y1={yS(maxSlope)} x2={P.l+cW} y2={yS(maxSlope)} stroke="#e12a3f66" strokeWidth="1" strokeDasharray="4,3"/>
       <line x1={P.l} y1={yS(-maxSlope)} x2={P.l+cW} y2={yS(-maxSlope)} stroke="#e12a3f66" strokeWidth="1" strokeDasharray="4,3"/>
       <line x1={P.l} y1={yS(maxSlopeDelta)} x2={P.l+cW} y2={yS(maxSlopeDelta)} stroke="#8a630066" strokeWidth="1" strokeDasharray="3,4"/>
@@ -594,8 +594,8 @@ function SlopeChart({results,maxSlope,maxSlopeDelta}){
       {deltaData.map((d,i)=>(
         <circle key={i} cx={xS(d.n)} cy={yS(d.v)} r="2" fill={Math.abs(d.v)>maxSlopeDelta?"#e12a3f":"#8a6300"}/>
       ))}
-      <line x1={P.l} y1={P.t} x2={P.l} y2={P.t+cH} stroke="#5f6165" strokeWidth="1"/>
-      <line x1={P.l} y1={P.t+cH} x2={P.l+cW} y2={P.t+cH} stroke="#5f6165" strokeWidth="1"/>
+      <line x1={P.l} y1={P.t} x2={P.l} y2={P.t+cH} stroke="#4d4d4f" strokeWidth="1"/>
+      <line x1={P.l} y1={P.t+cH} x2={P.l+cW} y2={P.t+cH} stroke="#4d4d4f" strokeWidth="1"/>
       <text x={P.l+cW/2} y={H-2} textAnchor="middle" fontSize="8.5" fill="#4d4d4f">Pile Location (S→N)</text>
       <g transform={`translate(${P.l+cW-170},${P.t+3})`}>
         <rect width="170" height="32" rx="3" fill="#ffffff" opacity="0.9"/>
@@ -622,7 +622,7 @@ function RevealBars({results,minReveal,maxReveal,targetReveal}){
           );
         })}
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#5f6165",marginTop:2}}>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#4d4d4f",marginTop:2}}>
         <span>Min: {results.length?arrMinBy(results,r=>r.FinalReveal).toFixed(3):""} ft</span>
         <span style={{color:"#ad1f2b"}}>Target: {targetReveal} ft</span>
         <span>Max: {results.length?arrMaxBy(results,r=>r.FinalReveal).toFixed(3):""} ft</span>
@@ -641,7 +641,7 @@ function ExplanationCard({results}){
   const hasCF=r.TotalCut>0.001||r.TotalFill>0.001;
   return(
     <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:8,padding:"14px 16px",marginBottom:14}}>
-      <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>
+      <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>
         ⚙ Method Logic
       </div>
       {/* Method badge */}
@@ -656,7 +656,7 @@ function ExplanationCard({results}){
 
       {/* Algorithm steps visualization */}
       <div style={{borderTop:"1px solid #e2e3e5",paddingTop:10,marginTop:4}}>
-        <div style={{fontSize:10,color:"#5f6165",marginBottom:8,letterSpacing:"0.08em",textTransform:"uppercase"}}>Decision Path</div>
+        <div style={{fontSize:10,color:"#4d4d4f",marginBottom:8,letterSpacing:"0.08em",textTransform:"uppercase"}}>Decision Path</div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {[
             {label:"1. Straight line — no earthwork", done:true, ok:isSL,
@@ -666,14 +666,14 @@ function ExplanationCard({results}){
           ].map(({label,done,ok,desc},i)=>(
             <div key={i} style={{display:"flex",gap:8,opacity:done?1:0.35}}>
               <div style={{width:18,height:18,borderRadius:"50%",flexShrink:0,marginTop:1,
-                background:ok?"#ad1f2b":done?"#8a6300":"#6d6f73",
+                background:ok?"#ad1f2b":done?"#8a6300":"#4d4d4f",
                 display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,
                 color:ok?"#ffffff":done?"#ffffff":"#4d4d4f",fontWeight:700}}>
                 {ok?"✓":done?"→":"○"}
               </div>
               <div>
                 <div style={{fontSize:11,color:ok?"#ad1f2b":done?"#8a6300":"#4d4d4f",fontWeight:ok?700:400}}>{label}</div>
-                <div style={{fontSize:10,color:"#5f6165",lineHeight:1.5}}>{desc}</div>
+                <div style={{fontSize:10,color:"#4d4d4f",lineHeight:1.5}}>{desc}</div>
               </div>
             </div>
           ))}
@@ -683,18 +683,18 @@ function ExplanationCard({results}){
       {/* Cut/fill balance */}
       {hasCF&&(
         <div style={{borderTop:"1px solid #e2e3e5",paddingTop:10,marginTop:10}}>
-          <div style={{fontSize:10,color:"#5f6165",marginBottom:6,letterSpacing:"0.08em",textTransform:"uppercase"}}>Earthwork Balance</div>
+          <div style={{fontSize:10,color:"#4d4d4f",marginBottom:6,letterSpacing:"0.08em",textTransform:"uppercase"}}>Earthwork Balance</div>
           <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
             <div style={{flex:1,background:"#fff0f0",border:"1px solid #e12a3f",borderRadius:4,padding:"6px 10px"}}>
               <div style={{fontSize:9,color:"#e12a3f",letterSpacing:"0.1em"}}>CUT</div>
               <div style={{fontSize:16,color:"#e12a3f",fontWeight:700}}>{r.TotalCut.toFixed(3)}<span style={{fontSize:10,fontWeight:400}}> ft</span></div>
             </div>
-            <div style={{display:"flex",alignItems:"center",fontSize:14,color:"#5f6165"}}>⇌</div>
+            <div style={{display:"flex",alignItems:"center",fontSize:14,color:"#4d4d4f"}}>⇌</div>
             <div style={{flex:1,background:"#fafafa",border:"1px solid #278747",borderRadius:4,padding:"6px 10px"}}>
               <div style={{fontSize:9,color:"#e12a3f",letterSpacing:"0.1em"}}>FILL</div>
               <div style={{fontSize:16,color:"#1f66ad",fontWeight:700}}>{r.TotalFill.toFixed(3)}<span style={{fontSize:10,fontWeight:400}}> ft</span></div>
             </div>
-            <div style={{display:"flex",alignItems:"center",fontSize:14,color:"#5f6165"}}>=</div>
+            <div style={{display:"flex",alignItems:"center",fontSize:14,color:"#4d4d4f"}}>=</div>
             <div style={{flex:1,background:r.NetImbalance<0.1?"#fafafa":"#fff8f0",
               border:`1px solid ${r.NetImbalance<0.1?"#4d4d4f":"#fff3e0"}`,borderRadius:4,padding:"6px 10px"}}>
               <div style={{fontSize:9,color:r.NetImbalance<0.1?"#e12a3f":"#8a6300",letterSpacing:"0.1em"}}>NET</div>
@@ -1083,7 +1083,7 @@ function ProfileWithAdj({selectedTracker,piles,results,trackerMap,trackerIDs,all
   const adjResults=adjTid&&allResults[adjTid]?[...allResults[adjTid]].sort((a,b)=>a.Northing-b.Northing):null;
   return(
     <div>
-      <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.08em",marginBottom:6}}>
+      <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.08em",marginBottom:6}}>
         ELEVATION PROFILE — {selectedTracker}
         {adjTid&&<span style={{color:"#1f6fd0",marginLeft:8}}>+ {adjTid} ({adjSide})</span>}
       </div>
@@ -2232,8 +2232,8 @@ export default function App(){
           <input type="number" min={min} max={max} step={step} value={c[key]}
             onChange={e=>setC(key,parseFloat(e.target.value))}
             style={{width:72,background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:3,
-              color,padding:"3px 6px",fontFamily:"'DM Mono',monospace",fontSize:12,textAlign:"right"}}/>
-          {unit&&<span style={{fontSize:10,color:"#5f6165",width:20}}>{unit}</span>}
+              color,padding:"3px 6px",fontSize:12,textAlign:"right"}}/>
+          {unit&&<span style={{fontSize:10,color:"#4d4d4f",width:20}}>{unit}</span>}
         </div>
       </div>
       <input type="range" min={min} max={max} step={step} value={c[key]}
@@ -2252,8 +2252,8 @@ export default function App(){
             value={(c[key]*100).toFixed(2)}
             onChange={e=>setC(key,parseFloat(e.target.value)/100)}
             style={{width:72,background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:3,
-              color,padding:"3px 6px",fontFamily:"'DM Mono',monospace",fontSize:12,textAlign:"right"}}/>
-          {unit&&<span style={{fontSize:10,color:"#5f6165",width:20}}>{unit}</span>}
+              color,padding:"3px 6px",fontSize:12,textAlign:"right"}}/>
+          {unit&&<span style={{fontSize:10,color:"#4d4d4f",width:20}}>{unit}</span>}
         </div>
       </div>
       <input type="range" min={minPct} max={maxPct} step={stepPct}
@@ -2275,7 +2275,7 @@ export default function App(){
           <div style={{display:"flex",gap:8}}>
             <button onClick={()=>fileRef.current.click()} style={{padding:"7px 12px",background:"#f0f0f0",border:"1px solid #bcbec0",borderRadius:5,color:"#333132",cursor:"pointer",fontSize:11}}>{fileLoading?"⏳ Loading…":"↑ Load .xlsx / .csv"}</button>
             <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{display:"none"}}/>
-            <button onClick={exportXLSX} disabled={progress.running||trackerIDs.length===0} style={{padding:"7px 12px",background:progress.running?"#f0f0f0":"#ffffff",border:"1px solid #ffffff",borderRadius:5,color:progress.running?"#5f6165":"#ad1f2b",fontWeight:600,cursor:progress.running?"not-allowed":"pointer",fontSize:11}}>↓ Export .xlsx</button>
+            <button onClick={exportXLSX} disabled={progress.running||trackerIDs.length===0} style={{padding:"7px 12px",background:progress.running?"#f0f0f0":"#ffffff",border:"1px solid #ffffff",borderRadius:5,color:progress.running?"#4d4d4f":"#ad1f2b",fontWeight:600,cursor:progress.running?"not-allowed":"pointer",fontSize:11}}>↓ Export .xlsx</button>
           </div>
           {progress.total>0&&(
             <div style={{display:"flex",alignItems:"center",gap:8,minWidth:260}}>
@@ -2298,46 +2298,46 @@ export default function App(){
       <div style={{display:"flex",flex:1,overflow:"hidden"}}>
         {/* LEFT PANEL */}
         <div style={{width:210,minWidth:210,background:"#ffffff",borderRight:"1px solid #e2e3e5",padding:"16px 14px",overflowY:"auto",flexShrink:0}}>
-          <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>⚙ Constraints</div>
+          <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>⚙ Constraints</div>
 
-          <div style={{fontSize:9,color:"#5f6165",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>Pile Reveal</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#333132",textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:600,marginBottom:6,paddingBottom:3,borderBottom:"2px solid #ad1f2b"}}><span style={{width:8,height:8,borderRadius:2,background:"#ad1f2b",flexShrink:0}}/>Pile Reveal</div>
           {numSlider("targetReveal",1,10,0.1,"Target Reveal","ft")}
           {numSlider("minReveal",0.5,8,0.1,"Min Reveal","ft","#1f66ad")}
           {numSlider("maxReveal",2,12,0.1,"Max Reveal","ft","#8a6300")}
 
           <div style={{borderTop:"1px solid #e2e3e5",margin:"10px 0"}}/>
-          <div style={{fontSize:9,color:"#5f6165",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>Tube Geometry</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#333132",textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:600,marginBottom:6,paddingBottom:3,borderBottom:"2px solid #5e4b40"}}><span style={{width:8,height:8,borderRadius:2,background:"#5e4b40",flexShrink:0}}/>Tube Geometry</div>
           {numSliderPct("maxSlope",0.1,20,0.1,"Max Tube Slope","%","#ad1f2b")}
-          <div style={{fontSize:9,color:"#6d6f73",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
+          <div style={{fontSize:9,color:"#4d4d4f",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
             Max slope of the N–S torque tube between any two pile spans
           </div>
           {numSliderPct("maxSlopeDelta",0.01,10,0.01,"Max Slope Δ","%","#8a6300")}
-          <div style={{fontSize:9,color:"#6d6f73",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
+          <div style={{fontSize:9,color:"#4d4d4f",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
             Max change in slope between consecutive spans — governs flex joint rotation
           </div>
 
           <div style={{borderTop:"1px solid #e2e3e5",margin:"10px 0"}}/>
-          <div style={{fontSize:9,color:"#5f6165",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>Grading Preference</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#333132",textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:600,marginBottom:8,paddingBottom:3,borderBottom:"2px solid #c7bb2e"}}><span style={{width:8,height:8,borderRadius:2,background:"#c7bb2e",flexShrink:0}}/>Grading Preference</div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
             <div style={{flex:1,paddingRight:8}}>
               <div style={{fontSize:10,color:"#4d4d4f"}}>Prefer Cut on High Ground</div>
-              <div style={{fontSize:9,color:"#6d6f73",lineHeight:1.4,marginTop:2}}>Rotate tube to avoid cut at lowest end pile</div>
+              <div style={{fontSize:9,color:"#4d4d4f",lineHeight:1.4,marginTop:2}}>Rotate tube to avoid cut at lowest end pile</div>
             </div>
             <div onClick={()=>setC("preferCutHigh",!c.preferCutHigh)}
-              style={{width:36,height:20,borderRadius:10,background:c.preferCutHigh?"#ad1f2b":"#6d6f73",
+              style={{width:36,height:20,borderRadius:10,background:c.preferCutHigh?"#ad1f2b":"#4d4d4f",
                 cursor:"pointer",position:"relative",transition:"background 0.2s",flexShrink:0}}>
               <div style={{width:14,height:14,borderRadius:7,background:"#ffffff",position:"absolute",
                 top:3,left:c.preferCutHigh?19:3,transition:"left 0.2s"}}/>
             </div>
           </div>
           <div style={{borderTop:"1px solid #e2e3e5",margin:"10px 0"}}/>
-          <div style={{fontSize:9,color:"#5f6165",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>Adjacency Limits</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#333132",textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:600,marginBottom:6,paddingBottom:3,borderBottom:"2px solid #1aa6c9"}}><span style={{width:8,height:8,borderRadius:2,background:"#1aa6c9",flexShrink:0}}/>Adjacency Limits</div>
           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
             <span style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.05em",flex:1}}>N-S End Limit Mode</span>
             {["delta","slope"].map(md=>(
               <div key={md} onClick={()=>setC("nsEndMode",md)}
                 style={{padding:"2px 10px",borderRadius:3,fontSize:10,cursor:"pointer",
-                  border:`1px solid ${c.nsEndMode===md?"#c2571c":"#6d6f73"}`,
+                  border:`1px solid ${c.nsEndMode===md?"#c2571c":"#4d4d4f"}`,
                   background:c.nsEndMode===md?"#c2571c":"transparent",
                   color:c.nsEndMode===md?"#fff":"#4d4d4f",fontWeight:c.nsEndMode===md?700:400}}>
                 {md==="delta"?"ft":"%"}
@@ -2347,30 +2347,30 @@ export default function App(){
           {c.nsEndMode==="slope"
             ?numSliderPct("maxNSSlope",1,100,0.5,"N-S End Slope","%","#c2571c")
             :numSlider("maxNSDelta",0.1,5,0.1,"N-S End Δ","ft","#c2571c")}
-          <div style={{fontSize:9,color:"#6d6f73",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
+          <div style={{fontSize:9,color:"#4d4d4f",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
             {c.nsEndMode==="slope"
               ?"Max end-to-end TOP slope across the N-S gap — limit scales with the actual gap"
               :"Max TOP diff between adjacent N-S tracker ends (fixed, regardless of gap)"}
           </div>
           {numSliderPct("maxEWSlope",1,20,0.5,"E-W End Slope","%","#7b4bb5")}
-          <div style={{fontSize:9,color:"#6d6f73",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
+          <div style={{fontSize:9,color:"#4d4d4f",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
             Max TOP slope between E-W adjacent piles
           </div>
           {numSlider("maxEWSpacing",5,50,1,"E-W Spacing Limit","ft","#7b4bb5")}
-          <div style={{fontSize:9,color:"#6d6f73",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
+          <div style={{fontSize:9,color:"#4d4d4f",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
             Max easting gap to check E-W adjacency (ft)
           </div>
           {numSlider("maxEWNSGap",1,100,1,"E-W N-S Gap Limit","ft","#7b4bb5")}
-          <div style={{fontSize:9,color:"#6d6f73",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
+          <div style={{fontSize:9,color:"#4d4d4f",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
             Max northing distance to consider piles E-W adjacent
           </div>
           {numSlider("maxNSGap",1,50,1,"N-S Gap Limit","ft","#1f66ad")}
-          <div style={{fontSize:9,color:"#6d6f73",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
+          <div style={{fontSize:9,color:"#4d4d4f",marginTop:-8,marginBottom:8,lineHeight:1.4}}>
             Max northing gap to consider trackers N-S adjacent
           </div>
 
           <div style={{borderTop:"1px solid #e2e3e5",margin:"10px 0"}}/>
-          <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>Fleet Summary</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,fontSize:10,color:"#333132",letterSpacing:"0.1em",textTransform:"uppercase",fontWeight:600,marginBottom:8,paddingBottom:3,borderBottom:"2px solid #333132"}}><span style={{width:8,height:8,borderRadius:2,background:"#333132",flexShrink:0}}/>Fleet Summary</div>
           <FleetStats summary={summary} adjacencyFlags={adjacencyFlags}/>
         </div>
 
@@ -2378,9 +2378,9 @@ export default function App(){
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
           {/* Tracker selector bar */}
           <div style={{padding:"8px 18px",background:"#ffffff",borderBottom:"1px solid #e2e3e5",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-            <span style={{fontSize:10,color:"#5f6165",letterSpacing:"0.08em"}}>TRACKER</span>
+            <span style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.08em"}}>TRACKER</span>
             <select value={selectedTracker} onChange={e=>setSelectedTracker(e.target.value)}
-              style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:4,color:"#ad1f2b",padding:"4px 8px",fontFamily:"'DM Mono',monospace",fontSize:12}}>
+              style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:4,color:"#ad1f2b",padding:"4px 8px",fontSize:12}}>
               {trackerIDs.map(id=><option key={id} value={id}>{id} {(allResults[id]?.[0]?.Violations?.length||0)>0?"⚠":"✓"}</option>)}
             </select>
             {[
@@ -2391,8 +2391,8 @@ export default function App(){
               {label:"Cut",val:r0?.TotalCut!=null?r0.TotalCut.toFixed(3)+" ft":"—",col:"#e12a3f"},
               {label:"Fill",val:r0?.TotalFill!=null?r0.TotalFill.toFixed(3)+" ft":"—",col:"#1f66ad"},
             ].map(({label,val,warn,col})=>(
-              <div key={label} style={{background:warn?"#ffe8e8":"#f5f5f5",border:`1px solid ${warn?"#ffe0e0":"#6d6f73"}`,borderRadius:3,padding:"3px 7px",fontSize:10}}>
-                <span style={{color:"#5f6165"}}>{label}: </span>
+              <div key={label} style={{background:warn?"#ffe8e8":"#f5f5f5",border:`1px solid ${warn?"#ffe0e0":"#4d4d4f"}`,borderRadius:3,padding:"3px 7px",fontSize:10}}>
+                <span style={{color:"#4d4d4f"}}>{label}: </span>
                 <span style={{color:warn?"#e12a3f":col||"#333132"}}>{val}</span>
               </div>
             ))}
@@ -2405,7 +2405,7 @@ export default function App(){
                 padding:"7px 16px",fontSize:11,letterSpacing:"0.05em",
                 background:activeTab===id?"#f5f5f5":"transparent",border:"none",
                 borderBottom:activeTab===id?"2px solid #278747":"2px solid transparent",
-                color:activeTab===id?"#ad1f2b":"#5f6165",cursor:"pointer",transition:"all 0.1s"}}>
+                color:activeTab===id?"#ad1f2b":"#4d4d4f",cursor:"pointer",transition:"all 0.1s"}}>
                 {label}
               </button>
             ))}
@@ -2418,7 +2418,7 @@ export default function App(){
               <div>
                 <ExplanationCard results={results}/>
                 <ProfileWithAdj selectedTracker={selectedTracker} piles={piles} results={results} trackerMap={trackerMap} trackerIDs={trackerIDs} allResults={allResults} adjacencyFlags={adjacencyFlags} constraints={constraints}/>
-                <div style={{marginTop:14,fontSize:10,color:"#5f6165",letterSpacing:"0.08em",marginBottom:6}}>PILE REVEAL DISTRIBUTION</div>
+                <div style={{marginTop:14,fontSize:10,color:"#4d4d4f",letterSpacing:"0.08em",marginBottom:6}}>PILE REVEAL DISTRIBUTION</div>
                 <RevealBars results={results} minReveal={c.minReveal} maxReveal={c.maxReveal} targetReveal={c.targetReveal}/>
               </div>
             )}
@@ -2431,14 +2431,14 @@ export default function App(){
                   <span style={{color:"#8a6300"}}>⬥ Slope Δ (flex joint)</span> — change in slope between one span and the next. This is the angular rotation demanded of the flexible joint at each interior pile top. The flex joint limit is typically the most constraining geometry check on undulating terrain.
                   <br/><span style={{color:"#e12a3f"}}>Red dashed lines</span> = your constraint limits (in % slope).
                 </div>
-                <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.08em",marginBottom:6}}>TUBE SLOPE & FLEX JOINT ROTATION — {selectedTracker}</div>
+                <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.08em",marginBottom:6}}>TUBE SLOPE & FLEX JOINT ROTATION — {selectedTracker}</div>
                 <div style={{overflowX:"auto"}}><SlopeChart results={results} maxSlope={c.maxSlope} maxSlopeDelta={c.maxSlopeDelta}/></div>
                 {/* Slope table */}
-                <div style={{marginTop:16,fontSize:10,color:"#5f6165",letterSpacing:"0.08em",marginBottom:6}}>SPAN-BY-SPAN SLOPE TABLE</div>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                <div style={{marginTop:16,fontSize:10,color:"#4d4d4f",letterSpacing:"0.08em",marginBottom:6}}>SPAN-BY-SPAN SLOPE TABLE</div>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,}}>
                   <thead><tr style={{borderBottom:"1px solid #bcbec0"}}>
                     {["Span","From Pile","To Pile","Δ Northing (ft)","Δ TOP Elev (ft)","Slope %","ΔSlope %","Flex OK?"].map(h=>(
-                      <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#5f6165",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
+                      <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#4d4d4f",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
@@ -2480,10 +2480,10 @@ export default function App(){
 
             {activeTab==="table"&&(
               <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,}}>
                   <thead><tr style={{borderBottom:"1px solid #bcbec0"}}>
                     {["#","Northing","Exist. Grd","Top of Pile","Reveal","Cut/Fill","Adj. Grd","Slope %","Slope Δ %","OK"].map(h=>(
-                      <th key={h} style={{padding:"5px 8px",textAlign:"right",fontSize:9,color:"#5f6165",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
+                      <th key={h} style={{padding:"5px 8px",textAlign:"right",fontSize:9,color:"#4d4d4f",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
@@ -2514,10 +2514,10 @@ export default function App(){
                           <td style={{padding:"4px 8px",textAlign:"right",color:"#333132"}}>{r.ExistingGround.toFixed(4)}</td>
                           <td style={{padding:"4px 8px",textAlign:"right",color:"#ad1f2b"}}>{r.TopOfPile.toFixed(4)}</td>
                           <td style={{padding:"4px 8px",textAlign:"right",color:revOk?"#ad1f2b":"#e12a3f",fontWeight:revOk?400:700}}>{r.FinalReveal.toFixed(4)}</td>
-                          <td style={{padding:"4px 8px",textAlign:"right",color:Math.abs(r.CutFill)<0.001?"#5f6165":r.CutFill<0?"#e12a3f":"#1f66ad"}}>
+                          <td style={{padding:"4px 8px",textAlign:"right",color:Math.abs(r.CutFill)<0.001?"#4d4d4f":r.CutFill<0?"#e12a3f":"#1f66ad"}}>
                             {Math.abs(r.CutFill)<0.001?"—":r.CutFill>0?`+${r.CutFill.toFixed(4)}`:r.CutFill.toFixed(4)}
                           </td>
-                          <td style={{padding:"4px 8px",textAlign:"right",color:Math.abs(r.CutFill)<0.001?"#5f6165":"#8a6300"}}>{r.FinalGround.toFixed(4)}</td>
+                          <td style={{padding:"4px 8px",textAlign:"right",color:Math.abs(r.CutFill)<0.001?"#4d4d4f":"#8a6300"}}>{r.FinalGround.toFixed(4)}</td>
                           <td style={{padding:"4px 8px",textAlign:"right",color:sOk?"#333132":"#e12a3f",fontWeight:sOk?400:700}}>{liveSlope!==null?(liveSlope*100).toFixed(3)+"%":"—"}</td>
                           <td style={{padding:"4px 8px",textAlign:"right",color:dOk?"#333132":"#e12a3f",fontWeight:dOk?400:700}}>{liveDelta!==null?(liveDelta*100).toFixed(3)+"%":"—"}</td>
                           <td style={{padding:"4px 8px",textAlign:"right"}}>{allOk?<span style={{color:"#ad1f2b"}}>✓</span>:<span style={{color:"#e12a3f"}}>⚠</span>}</td>
@@ -2531,10 +2531,10 @@ export default function App(){
 
             {activeTab==="summary"&&(
               <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,}}>
                   <thead><tr style={{borderBottom:"1px solid #bcbec0"}}>
                     {["Tracker","Method","Min Rev","Max Rev","Avg Rev","Max Slope %","Max ΔSlope %","Cut (ft)","Fill (ft)","Net (ft)","Status"].map(h=>(
-                      <th key={h} style={{padding:"5px 8px",textAlign:"right",fontSize:9,color:"#5f6165",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
+                      <th key={h} style={{padding:"5px 8px",textAlign:"right",fontSize:9,color:"#4d4d4f",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
@@ -2550,15 +2550,15 @@ export default function App(){
                         <td style={{padding:"4px 8px",textAlign:"right",color:"#333132"}}>{s.avgRev.toFixed(3)}</td>
                         <td style={{padding:"4px 8px",textAlign:"right",color:s.maxAbsSlope<=c.maxSlope?"#333132":"#e12a3f",fontWeight:s.maxAbsSlope>c.maxSlope?700:400}}>{(s.maxAbsSlope*100).toFixed(3)}%</td>
                         <td style={{padding:"4px 8px",textAlign:"right",color:s.maxAbsSlopeDelta<=c.maxSlopeDelta?"#333132":"#e12a3f",fontWeight:s.maxAbsSlopeDelta>c.maxSlopeDelta?700:400}}>{(s.maxAbsSlopeDelta*100).toFixed(3)}%</td>
-                        <td style={{padding:"4px 8px",textAlign:"right",color:s.totalCut>0.001?"#e12a3f":"#5f6165"}}>{s.totalCut>0.001?s.totalCut.toFixed(3):"—"}</td>
-                        <td style={{padding:"4px 8px",textAlign:"right",color:s.totalFill>0.001?"#1f66ad":"#5f6165"}}>{s.totalFill>0.001?s.totalFill.toFixed(3):"—"}</td>
+                        <td style={{padding:"4px 8px",textAlign:"right",color:s.totalCut>0.001?"#e12a3f":"#4d4d4f"}}>{s.totalCut>0.001?s.totalCut.toFixed(3):"—"}</td>
+                        <td style={{padding:"4px 8px",textAlign:"right",color:s.totalFill>0.001?"#1f66ad":"#4d4d4f"}}>{s.totalFill>0.001?s.totalFill.toFixed(3):"—"}</td>
                         <td style={{padding:"4px 8px",textAlign:"right",color:s.net<0.05?"#ad1f2b":s.net<0.5?"#8a6300":"#e12a3f"}}>{s.totalCut>0.001||s.totalFill>0.001?s.net.toFixed(3):"—"}</td>
                         <td style={{padding:"4px 8px",textAlign:"right"}}>{s.ok?<span style={{color:"#ad1f2b"}}>✓</span>:<span style={{color:"#e12a3f"}}>⚠{s.violations}</span>}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <div style={{marginTop:8,fontSize:9,color:"#5f6165"}}>Click any row to view profile · Blue = Straight Line (no earthwork) · Orange = Terrain Follow · Net column = remaining cut/fill imbalance after row balancing</div>
+                <div style={{marginTop:8,fontSize:9,color:"#4d4d4f"}}>Click any row to view profile · Blue = Straight Line (no earthwork) · Orange = Terrain Follow · Net column = remaining cut/fill imbalance after row balancing</div>
               </div>
             )}
 
@@ -2570,9 +2570,9 @@ export default function App(){
                     {label:"E-W End Flags",count:(adjacencyFlags.ew||[]).length,color:"#7b4bb5",desc:`END slope > ${(constraints.maxEWSlope*100).toFixed(1)}%`},
                   ].map(({label,count,color,desc})=>(
                     <div key={label} style={{background:"#f5f5f5",border:`1px solid ${color}44`,borderRadius:6,padding:"10px 16px",minWidth:160}}>
-                      <div style={{fontSize:9,color:"#5f6165",letterSpacing:"0.1em",textTransform:"uppercase"}}>{label}</div>
+                      <div style={{fontSize:9,color:"#4d4d4f",letterSpacing:"0.1em",textTransform:"uppercase"}}>{label}</div>
                       <div style={{fontSize:24,color:count>0?color:"#4d4d4f",fontWeight:700}}>{count}</div>
-                      <div style={{fontSize:9,color:"#5f6165"}}>{desc}</div>
+                      <div style={{fontSize:9,color:"#4d4d4f"}}>{desc}</div>
                     </div>
                   ))}
                 </div>
@@ -2586,10 +2586,10 @@ export default function App(){
                     <div style={{fontSize:9,color:"#4d4d4f",marginBottom:6}}>
                       Pairs where TOP elevation difference between adjacent tracker ends exceeds {constraints.maxNSDelta} ft
                     </div>
-                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,}}>
                       <thead><tr style={{borderBottom:"1px solid #bcbec0"}}>
                         {["S Tracker (N end)","N Tracker (S end)","TOP (S)","TOP (N)","Δ TOP (ft)","Gap (ft)"].map(h=>(
-                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#5f6165",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
+                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#4d4d4f",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
@@ -2618,15 +2618,15 @@ export default function App(){
                     <div style={{fontSize:9,color:"#4d4d4f",marginBottom:6}}>
                       Pairs where TOP slope between adjacent tracker ends exceeds {(constraints.maxEWSlope*100).toFixed(1)}% (spacing-based)
                     </div>
-                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,}}>
                       <thead><tr style={{borderBottom:"1px solid #bcbec0"}}>
                         {["Tracker A","Pile","Tracker B","Pile","TOP A","TOP B","Slope %","ΔE (ft)","ΔN (ft)"].map(h=>(
-                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#5f6165",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
+                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#4d4d4f",fontWeight:500,whiteSpace:"nowrap"}}>{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
                         {(adjacencyFlags.ew||[]).map((f,i)=>(
-                          <tr key={i} style={{borderBottom:"1px solid #6d6f73",background:i%2===0?"transparent":"#f5f5f5"}}>
+                          <tr key={i} style={{borderBottom:"1px solid #4d4d4f",background:i%2===0?"transparent":"#f5f5f5"}}>
                               <td style={{padding:"4px 6px",textAlign:"center"}}>
                                 {[f.trackerA,f.trackerB].map(tid=>{
                                   const nsFlags=adjacencyFlags.ns||[];
@@ -2637,7 +2637,7 @@ export default function App(){
                                       title={`${tid}${isClean?' ✓ NS clean':' ⚠ has NS flags'}`}
                                       onClick={(e)=>{e.stopPropagation();setEwAnchors(prev=>{const s=new Set(prev);s.has(tid)?s.delete(tid):s.add(tid);return s;});}}
                                       style={{width:14,height:14,borderRadius:2,cursor:"pointer",margin:"1px auto",
-                                        border:`2px solid ${isClean?"#278747":"#6d6f73"}`,
+                                        border:`2px solid ${isClean?"#278747":"#4d4d4f"}`,
                                         background:isAnchor?(isClean?"#278747":"#8a6300"):"transparent",
                                         display:"flex",alignItems:"center",justifyContent:"center",
                                         fontSize:9,color:"#fff",fontWeight:700}}>
@@ -2684,7 +2684,7 @@ export default function App(){
                     }}
                     disabled={nsCorrectionRunning||Object.keys(allResults).length===0}
                     style={{padding:"8px 18px",background:"#f0f0f0",border:"1px solid #c2571c66",borderRadius:5,
-                      color:"#c2571c",fontFamily:"'DM Mono',monospace",fontSize:12,cursor:"pointer",
+                      color:"#c2571c",fontSize:12,cursor:"pointer",
                       opacity:nsCorrectionRunning||Object.keys(allResults).length===0?0.4:1}}>
                     {nsCorrectionRunning?"⏳ Applying…":"⚡ Apply N-S Corrections"}
                   </button>
@@ -2692,7 +2692,7 @@ export default function App(){
                     <button
                       onClick={()=>{setAllResults(nsCorrection.snapshot);setNsCorrection(null);}}
                       style={{padding:"8px 14px",background:"#f0f0f0",border:"1px solid #1f66ad44",borderRadius:5,
-                        color:"#1f66ad",fontFamily:"'DM Mono',monospace",fontSize:12,cursor:"pointer"}}>
+                        color:"#1f66ad",fontSize:12,cursor:"pointer"}}>
                       ↩ Revert
                     </button>
                   )}
@@ -2710,10 +2710,10 @@ export default function App(){
                     <div style={{fontSize:10,color:"#e12a3f",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:6}}>
                       ⚠ Residual Violations ({nsCorrection.residual.length}) — could not fully resolve
                     </div>
-                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,}}>
                       <thead><tr style={{borderBottom:"1px solid #bcbec0"}}>
                         {["S Tracker","N Tracker","Remaining Δ (ft)","Reason"].map(h=>(
-                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#5f6165",fontWeight:500}}>{h}</th>
+                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#4d4d4f",fontWeight:500}}>{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
@@ -2730,7 +2730,7 @@ export default function App(){
                   </div>
                 )}
                 {/* E-W Correction */}
-                <div style={{display:"flex",alignItems:"center",gap:12,marginTop:12,paddingTop:12,borderTop:"1px solid #6d6f73"}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginTop:12,paddingTop:12,borderTop:"1px solid #4d4d4f"}}>
                   <button
                     onClick={()=>{
                       if(Object.keys(allResults).length===0)return;
@@ -2746,14 +2746,14 @@ export default function App(){
                     }}
                     disabled={ewCorrectionRunning||Object.keys(allResults).length===0}
                     style={{padding:"8px 18px",background:"#f0f0f0",border:"1px solid #7b4bb588",borderRadius:5,
-                      color:"#7b4bb5",fontFamily:"'DM Mono',monospace",fontSize:12,cursor:"pointer",
+                      color:"#7b4bb5",fontSize:12,cursor:"pointer",
                       opacity:ewCorrectionRunning||Object.keys(allResults).length===0?0.4:1}}>
                     {ewCorrectionRunning?"⏳ Applying…":"⚡ Apply E-W Corrections"}
                   </button>
                   {ewCorrection?.snapshot&&(
                     <button onClick={()=>{setAllResults(ewCorrection.snapshot);setEwCorrection(null);}}
                       style={{padding:"8px 14px",background:"#f0f0f0",border:"1px solid #1f66ad44",borderRadius:5,
-                        color:"#1f66ad",fontFamily:"'DM Mono',monospace",fontSize:12,cursor:"pointer"}}>
+                        color:"#1f66ad",fontSize:12,cursor:"pointer"}}>
                       ↩ Revert E-W
                     </button>
                   )}
@@ -2769,10 +2769,10 @@ export default function App(){
                     <div style={{fontSize:10,color:"#e12a3f",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>
                       ⚠ Residual E-W Violations ({ewCorrection.residual.length})
                     </div>
-                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,fontFamily:"'DM Mono',monospace"}}>
-                      <thead><tr style={{borderBottom:"1px solid #6d6f73"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,}}>
+                      <thead><tr style={{borderBottom:"1px solid #4d4d4f"}}>
                         {["Tracker A","Pile","Tracker B","Pile","Slope %","ΔE (ft)"].map(h=>(
-                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#5f6165",fontWeight:500}}>{h}</th>
+                          <th key={h} style={{padding:"4px 8px",textAlign:"right",fontSize:9,color:"#4d4d4f",fontWeight:500}}>{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
@@ -2790,7 +2790,7 @@ export default function App(){
                     </table>
                   </div>
                 )}
-                <div style={{marginTop:8,fontSize:9,color:"#5f6165",display:"flex",gap:16,flexWrap:"wrap"}}>
+                <div style={{marginTop:8,fontSize:9,color:"#4d4d4f",display:"flex",gap:16,flexWrap:"wrap"}}>
                   <span>Click tracker name to view profile</span>
                   <span style={{display:"flex",alignItems:"center",gap:4}}>
                     <span style={{width:12,height:12,borderRadius:2,background:"#278747",display:"inline-block"}}/>
@@ -2813,7 +2813,7 @@ export default function App(){
 
                 {/* ── Data Source ─────────────────────────────────────────── */}
                 <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:8,padding:"18px 20px",marginBottom:16}}>
-                  <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>
+                  <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>
                     📂 Data Source
                   </div>
                   <div style={{fontSize:11,color:"#4d4d4f",marginBottom:10,lineHeight:1.6}}>
@@ -2828,7 +2828,7 @@ export default function App(){
                         borderRadius:6,color:"#ad1f2b",cursor:"pointer",fontSize:13,fontWeight:700,letterSpacing:"0.05em"}}>
                       {fileLoading?"⏳ Loading…":"↑ Upload .xlsx or .csv"}
                     </button>
-                    <div style={{fontSize:11,color:"#5f6165"}}>
+                    <div style={{fontSize:11,color:"#4d4d4f"}}>
                       {rawData.length>0
                         ?`✓ Loaded: ${rawData.length.toLocaleString()} piles across ${trackerIDs.length.toLocaleString()} trackers`
                         :"No file loaded — using embedded sample data"}
@@ -2847,7 +2847,7 @@ export default function App(){
                         ["Elev Range",rawData.length>0?`${arrMinBy(rawData,r=>r.ExistingGround).toFixed(2)} – ${arrMaxBy(rawData,r=>r.ExistingGround).toFixed(2)} ft`:"—"],
                       ].map(([l,v])=>(
                         <div key={l} style={{background:"#f5f5f5",borderRadius:4,padding:"8px 10px"}}>
-                          <div style={{fontSize:9,color:"#5f6165",letterSpacing:"0.08em"}}>{l}</div>
+                          <div style={{fontSize:9,color:"#4d4d4f",letterSpacing:"0.08em"}}>{l}</div>
                           <div style={{fontSize:12,color:"#333132",fontWeight:600,marginTop:2}}>{v}</div>
                         </div>
                       ))}
@@ -2857,7 +2857,7 @@ export default function App(){
 
                 {/* ── Design Parameters ───────────────────────────────────── */}
                 <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:8,padding:"18px 20px",marginBottom:16}}>
-                  <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:14}}>
+                  <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:14}}>
                     ⚙ Design Parameters
                   </div>
 
@@ -2881,15 +2881,15 @@ export default function App(){
                                 value={isPct?(constraints[key]*100).toFixed(step<0.1?2:1):constraints[key]}
                                 onChange={e=>setC(key,isPct?parseFloat(e.target.value)/100:parseFloat(e.target.value))}
                                 style={{width:72,background:"#f5f5f5",border:`1px solid ${color}44`,borderRadius:3,
-                                  color,padding:"4px 8px",fontFamily:"'DM Mono',monospace",fontSize:13,textAlign:"right"}}/>
-                              <span style={{fontSize:10,color:"#5f6165",width:20}}>{unit}</span>
+                                  color,padding:"4px 8px",fontSize:13,textAlign:"right"}}/>
+                              <span style={{fontSize:10,color:"#4d4d4f",width:20}}>{unit}</span>
                             </div>
                           </div>
                           <input type="range" min={min} max={max} step={step}
                             value={isPct?(constraints[key]*100).toFixed(step<0.1?2:1):constraints[key]}
                             onChange={e=>setC(key,isPct?parseFloat(e.target.value)/100:parseFloat(e.target.value))}
                             style={{width:"100%",accentColor:color,marginBottom:3}}/>
-                          <div style={{fontSize:9,color:"#6d6f73",lineHeight:1.5}}>{desc}</div>
+                          <div style={{fontSize:9,color:"#4d4d4f",lineHeight:1.5}}>{desc}</div>
                         </div>
                       ))}
                     </div>
@@ -2911,21 +2911,21 @@ export default function App(){
                                 value={isPct?(constraints[key]*100).toFixed(step<0.1?2:1):constraints[key]}
                                 onChange={e=>setC(key,isPct?parseFloat(e.target.value)/100:parseFloat(e.target.value))}
                                 style={{width:72,background:"#f5f5f5",border:`1px solid ${color}44`,borderRadius:3,
-                                  color,padding:"4px 8px",fontFamily:"'DM Mono',monospace",fontSize:13,textAlign:"right"}}/>
-                              {unit&&<span style={{fontSize:10,color:"#5f6165",width:20}}>{unit}</span>}
+                                  color,padding:"4px 8px",fontSize:13,textAlign:"right"}}/>
+                              {unit&&<span style={{fontSize:10,color:"#4d4d4f",width:20}}>{unit}</span>}
                             </div>
                           </div>
                           <input type="range" min={min} max={max} step={step}
                             value={isPct?(constraints[key]*100).toFixed(step<0.1?2:1):constraints[key]}
                             onChange={e=>setC(key,isPct?parseFloat(e.target.value)/100:parseFloat(e.target.value))}
                             style={{width:"100%",accentColor:color,marginBottom:3}}/>
-                          <div style={{fontSize:9,color:"#6d6f73",lineHeight:1.5}}>{desc}</div>
+                          <div style={{fontSize:9,color:"#4d4d4f",lineHeight:1.5}}>{desc}</div>
                         </div>
                       ))}
 
                       {/* Parameter summary card */}
                       <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:6,padding:"10px 12px",marginTop:8}}>
-                        <div style={{fontSize:9,color:"#5f6165",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>Current Parameters</div>
+                        <div style={{fontSize:9,color:"#4d4d4f",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:8}}>Current Parameters</div>
                         {[
                           ["Target Reveal",`${constraints.targetReveal} ft`,"#ad1f2b"],
                           ["Min / Max Reveal",`${constraints.minReveal} / ${constraints.maxReveal} ft`,"#333132"],
@@ -2944,7 +2944,7 @@ export default function App(){
 
                 {/* ── Adjacency Parameters ──────────────────────────────── */}
                 <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:8,padding:"18px 20px",marginBottom:16}}>
-                  <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:14}}>
+                  <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:14}}>
                     🔗 Adjacency Check Parameters
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16}}>
@@ -2970,15 +2970,15 @@ export default function App(){
                               value={isPct?(constraints[key]*100).toFixed(step<0.1?2:1):constraints[key]}
                               onChange={e=>setC(key,isPct?parseFloat(e.target.value)/100:parseFloat(e.target.value))}
                               style={{width:72,background:"#f5f5f5",border:`1px solid ${color}44`,borderRadius:3,
-                                color,padding:"4px 8px",fontFamily:"'DM Mono',monospace",fontSize:13,textAlign:"right"}}/>
-                            <span style={{fontSize:10,color:"#5f6165",width:20}}>{unit}</span>
+                                color,padding:"4px 8px",fontSize:13,textAlign:"right"}}/>
+                            <span style={{fontSize:10,color:"#4d4d4f",width:20}}>{unit}</span>
                           </div>
                         </div>
                         <input type="range" min={min} max={max} step={step}
                           value={isPct?(constraints[key]*100).toFixed(step<0.1?2:1):constraints[key]}
                           onChange={e=>setC(key,isPct?parseFloat(e.target.value)/100:parseFloat(e.target.value))}
                           style={{width:"100%",accentColor:color,marginBottom:3}}/>
-                        <div style={{fontSize:9,color:"#6d6f73",lineHeight:1.5}}>{desc}</div>
+                        <div style={{fontSize:9,color:"#4d4d4f",lineHeight:1.5}}>{desc}</div>
                       </div>
                     ))}
                   </div>
@@ -2986,7 +2986,7 @@ export default function App(){
 
                 {/* ── Grading Preference ─────────────────────────────────── */}
                 <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:8,padding:"18px 20px",marginBottom:16}}>
-                  <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>
+                  <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>
                     ⚙ Grading Preference
                   </div>
                   <div style={{display:"flex",alignItems:"flex-start",gap:16}}>
@@ -3000,12 +3000,12 @@ export default function App(){
                     <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:4,paddingTop:2}}>
                       <div onClick={()=>setC("preferCutHigh",!constraints.preferCutHigh)}
                         style={{width:44,height:24,borderRadius:12,
-                          background:constraints.preferCutHigh?"#ad1f2b":"#6d6f73",
+                          background:constraints.preferCutHigh?"#ad1f2b":"#4d4d4f",
                           cursor:"pointer",position:"relative",transition:"background 0.2s"}}>
                         <div style={{width:18,height:18,borderRadius:9,background:"#ffffff",position:"absolute",
                           top:3,left:constraints.preferCutHigh?23:3,transition:"left 0.2s"}}/>
                       </div>
-                      <div style={{fontSize:9,color:constraints.preferCutHigh?"#ad1f2b":"#5f6165"}}>
+                      <div style={{fontSize:9,color:constraints.preferCutHigh?"#ad1f2b":"#4d4d4f"}}>
                         {constraints.preferCutHigh?"ON":"OFF"}
                       </div>
                     </div>
@@ -3013,7 +3013,7 @@ export default function App(){
                 </div>
                 {/* ── Export ──────────────────────────────────────────────── */}
                 <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:8,padding:"18px 20px"}}>
-                  <div style={{fontSize:10,color:"#5f6165",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>
+                  <div style={{fontSize:10,color:"#4d4d4f",letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:12}}>
                     ↓ Export Results
                   </div>
                   <div style={{fontSize:11,color:"#4d4d4f",marginBottom:14,lineHeight:1.7}}>
@@ -3033,12 +3033,12 @@ export default function App(){
                       padding:"12px 28px",fontSize:14,fontWeight:700,letterSpacing:"0.05em",
                       background:progress.running||trackerIDs.length===0?"#f0f0f0":"#fff5f5",
                       border:"1px solid #278747",borderRadius:6,
-                      color:progress.running||trackerIDs.length===0?"#6d6f73":"#ad1f2b",
+                      color:progress.running||trackerIDs.length===0?"#4d4d4f":"#ad1f2b",
                       cursor:progress.running||trackerIDs.length===0?"not-allowed":"pointer",
                     }}>
                     ↓ Download TrackerOptimization_Results.xlsx
                   </button>
-                  <div style={{marginTop:8,fontSize:9,color:"#6d6f73"}}>
+                  <div style={{marginTop:8,fontSize:9,color:"#4d4d4f"}}>
                     Columns: Tracker ID · Northing · Easting · Existing Ground · Top of Pile · Pile Reveal ·
                     Solution Type · Final FG · Ground Adj · Cut/Fill · Tube Slope · Slope Delta
                   </div>
@@ -3049,7 +3049,7 @@ export default function App(){
         </div>
       </div>
 
-      <div style={{borderTop:"1px solid #e2e3e5",padding:"5px 24px",fontSize:9,color:"#6d6f73",display:"flex",justifyContent:"space-between",background:"#ffffff"}}>
+      <div style={{borderTop:"1px solid #e2e3e5",padding:"5px 24px",fontSize:9,color:"#4d4d4f",display:"flex",justifyContent:"space-between",background:"#ffffff"}}>
         <span>Step 1: Straight Line (no grade) → Step 2: Terrain Follow (balanced cut/fill)</span>
         <span>Input: .xlsx or .csv → TrackerID, Northing, Easting, ExistingGround, MinReveal, MaxReveal (per-pile allowable reveals from EG) · Export: .xlsx with Results + Parameters sheets</span>
       </div>
