@@ -15,3 +15,7 @@ dist
 docs
 scripts
 *.md
+.venv
+server/tests
+server/__pycache__
+*.db

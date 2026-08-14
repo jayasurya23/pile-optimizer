@@ -30,7 +30,7 @@ on:
       - "package-lock.json"
       - "vite.config.js"
       - "Dockerfile"
-      - "nginx/**"
+      - "server/**"
       - ".github/workflows/deploy.yml"
   pull_request:
     branches: [main]
@@ -64,6 +64,12 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r server/requirements.txt pytest httpx
+      - run: python -m pytest server/tests -q
+
   deploy:
     needs: build
     if: github.event_name != 'pull_request' && vars.CONTAINER_APP_NAME != ''
@@ -84,6 +90,7 @@ jobs:
             --registry "${{ vars.ACR_NAME }}" \
             --image "${IMAGE_REPO}:${{ github.sha }}" \
             --image "${IMAGE_REPO}:latest" \
+            --build-arg GIT_SHA="${{ github.sha }}" \
             .
 
       - name: Deploy new revision
@@ -95,6 +102,16 @@ jobs:
         # container start) before anything rendered. One warm replica costs a
         # few dollars a month and takes first-byte to ~120ms.
         run: |
+          # Ingress FIRST: default readiness probes hit the ingress target
+          # port, so if this ran after the image update, a still-8080 ingress
+          # would probe uvicorn (8000), fail the new revision's activation,
+          # and wedge the pipeline. Order matters on the nginx→uvicorn
+          # transition; afterwards this is an idempotent re-assertion.
+          az containerapp ingress update \
+            --name "${{ vars.CONTAINER_APP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --target-port 8000
+
           az containerapp update \
             --name "${{ vars.CONTAINER_APP_NAME }}" \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
@@ -124,6 +141,21 @@ jobs:
 
           [ "$(jq -r '.identityProviders.azureActiveDirectory.validation.jwtClaimChecks.allowedGroups[0] // ""' <<<"$cfg")" = "${{ vars.AUTH_GROUP_ID }}" ] \
             || { echo "::error::GROUP CHECK MISSING — all 91 guest accounts can sign in"; exit 1; }
+
+      # Like the auth gate, the database wiring lives in Azure config, not this
+      # repo. engine() fails closed without DATABASE_URL, so a dropped secret
+      # ref means every save 500s while /healthz stays green — assert it here.
+      - name: Assert database wiring is still in place
+        run: |
+          app=$(az containerapp show \
+            --name "${{ vars.CONTAINER_APP_NAME }}" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" -o json)
+
+          [ "$(jq -r '.properties.template.containers[0].env // [] | map(select(.name=="DATABASE_URL")) | .[0].secretRef // ""' <<<"$app")" = "db-url" ] \
+            || { echo "::error::DATABASE_URL secretref missing — every save will 500"; exit 1; }
+
+          [ "$(jq -r '[.properties.configuration.secrets[]?.name] | index("db-url") != null' <<<"$app")" = "true" ] \
+            || { echo "::error::db-url secret is gone from the app"; exit 1; }
 
       - name: Show rollout
         run: |

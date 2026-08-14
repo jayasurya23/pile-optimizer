@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import RunBar from "./RunPanel.jsx";
 const _reactShim = React;
 import * as XLSX from "xlsx";
 
@@ -1819,6 +1820,11 @@ export default function App(){
   const [allResults,setAllResults]=useState({});
   const [progress,setProgress]=useState({done:0,total:0,running:false,elapsed:0});
   const runIdRef=useRef(0);
+  // Set when opening a stored run: the fleet effect consumes it and installs
+  // the saved results verbatim instead of re-solving. Re-solving would be
+  // deterministic for the base optimization but would silently discard any
+  // N-S / E-W corrections the engineer applied before saving.
+  const pendingHydrateRef=useRef(null);
 
   const trackerMap=useMemo(()=>groupByTracker(rawData),[rawData]);
   const trackerIDs=useMemo(()=>Object.keys(trackerMap).sort((a,b)=>{
@@ -1836,6 +1842,13 @@ export default function App(){
   // Fleet run: chunked async so the browser never freezes
   useEffect(()=>{
     const ids=trackerIDs; const total=ids.length; if(total===0)return;
+    if(pendingHydrateRef.current){
+      const h=pendingHydrateRef.current; pendingHydrateRef.current=null;
+      runIdRef.current++;                 // abort any in-flight solve
+      setAllResults(h.allResults);
+      setProgress({done:total,total,running:false,elapsed:"0.0"});
+      return;                             // corrections in h.allResults survive
+    }
     const runId=++runIdRef.current;
     const CHUNK=50; // trackers per chunk — ~25ms per chunk in JS
     const out={}; let i=0;
@@ -1874,6 +1887,23 @@ export default function App(){
     }
     setTimeout(runChunk,0);
   },[trackerMap,trackerIDs,constraints]);
+
+  // Reopen a stored run: restore inputs + constraints, and if the snapshot has
+  // solved results, install them via pendingHydrateRef so the fleet effect
+  // skips the re-solve (see the ref's comment).
+  const openSnapshot=useCallback((decoded)=>{
+    const ids=[...new Set(decoded.rawData.map(r=>r.TrackerID))];
+    pendingHydrateRef.current=Object.keys(decoded.allResults||{}).length>0
+      ?{allResults:decoded.allResults}:null;
+    setConstraints(decoded.constraints);
+    setRawData(decoded.rawData);
+    setEwAnchors(decoded.ewAnchors||new Set());
+    setSelectedTracker(decoded.selectedTracker&&ids.includes(decoded.selectedTracker)
+      ?decoded.selectedTracker:(ids[0]||"1-1"));
+    setNsCorrection(null);setEwCorrection(null);
+    setFileError("");
+    setActiveTab("summary");
+  },[]);
 
   const summary=useMemo(()=>trackerIDs.map(id=>{
     const res=allResults[id];if(!res||res.length===0)return null;
@@ -2272,10 +2302,13 @@ export default function App(){
           <div style={{fontSize:10,color:"#f0c9cd",marginTop:1}}>{trackerIDs.length} trackers · {rawData.length} pile locations · v1.1</div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
-          <div style={{display:"flex",gap:8}}>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
             <button onClick={()=>fileRef.current.click()} style={{padding:"7px 12px",background:"#f0f0f0",border:"1px solid #bcbec0",borderRadius:5,color:"#333132",cursor:"pointer",fontSize:11}}>{fileLoading?"⏳ Loading…":"↑ Load .xlsx / .csv"}</button>
             <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} style={{display:"none"}}/>
             <button onClick={exportXLSX} disabled={progress.running||trackerIDs.length===0} style={{padding:"7px 12px",background:progress.running?"#f0f0f0":"#ffffff",border:"1px solid #ffffff",borderRadius:5,color:progress.running?"#4d4d4f":"#ad1f2b",fontWeight:600,cursor:progress.running?"not-allowed":"pointer",fontSize:11}}>↓ Export .xlsx</button>
+            <RunBar busy={progress.running||fileLoading}
+              getSnapshot={()=>({constraints,rawData,allResults,selectedTracker,ewAnchors})}
+              onOpen={openSnapshot}/>
           </div>
           {progress.total>0&&(
             <div style={{display:"flex",alignItems:"center",gap:8,minWidth:260}}>

@@ -12,5 +12,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Dev API: uvicorn server.main:app on 8001 with LOCAL_DEV_MODE=1
+    proxy: {
+      "/api": "http://127.0.0.1:8001",
+    },
   },
 });

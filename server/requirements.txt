@@ -1,0 +1,6 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+SQLAlchemy>=2.0
+python-multipart>=0.0.18
+# PostgreSQL driver — installed on the Azure Linux image; local dev uses SQLite
+psycopg2-binary>=2.9; sys_platform == "linux"

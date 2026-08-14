@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 #
-# pile-optimizer — static Vite build served by nginx on Azure Container Apps.
-# Built by `az acr build` (no Docker on the CI runner), matching the house pattern.
+# pile-optimizer — Vite build served by the FastAPI run-storage backend on
+# Azure Container Apps. Built by `az acr build` (no Docker on the CI runner).
+# The server replaced nginx when runs became persistent: one process now serves
+# the SPA, the security headers, the EasyAuth tripwire, and /api/runs.
 
-# ---------- build ----------
+# ---------- frontend build ----------
 FROM mirror.gcr.io/library/node:20-alpine AS build
 WORKDIR /src
 
@@ -15,20 +17,22 @@ COPY . .
 RUN npm run build
 
 # ---------- runtime ----------
-# nginx-unprivileged runs as UID 101 and listens on 8080 — no root, no setcap,
-# and it satisfies Container Apps' non-root expectation without extra config.
-FROM mirror.gcr.io/nginxinc/nginx-unprivileged:1.27-alpine
+FROM mirror.gcr.io/library/python:3.11-slim
 
-# The stock image's /etc/nginx/nginx.conf already has `include /etc/nginx/conf.d/*.conf;`
-# inside its http{} block, which is what makes the `map` directive legal in ours.
-COPY --chown=101:101 nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY --chown=101:101 nginx/snippets/ /etc/nginx/snippets/
-COPY --chown=101:101 nginx/denied.html /usr/share/nginx/html/denied.html
+# Baked at build time so /api/me reports exactly which commit is running.
+ARG GIT_SHA=dev
+ENV GIT_SHA=${GIT_SHA} PYTHONUNBUFFERED=1
 
-COPY --from=build --chown=101:101 /src/dist/ /usr/share/nginx/html/
+WORKDIR /app
+COPY server/requirements.txt server/requirements.txt
+RUN pip install --no-cache-dir -r server/requirements.txt
 
-USER 101
-EXPOSE 8080
+COPY server/ server/
+COPY --from=build /src/dist/ dist/
 
-# nginx handles SIGTERM itself; no init shim needed for a request/response server.
-CMD ["nginx", "-g", "daemon off;"]
+# Non-root, matching the old nginx-unprivileged posture.
+RUN useradd --uid 1001 --create-home appuser
+USER 1001
+
+EXPOSE 8000
+CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
