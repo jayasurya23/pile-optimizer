@@ -9,8 +9,15 @@
 ## The decision
 
 `pile-optimizer` ships as a **Docker container on Azure Container Apps** running
-nginx over the static Vite `dist/`, at **`pile.castillope.com`**, behind Container
-Apps built-in auth (EasyAuth) against Entra ID.
+a FastAPI backend (`server/`) that serves both the static Vite `dist/` and the
+run-storage API, at **`civiltools.castillope.com`**, behind Container Apps
+built-in auth (EasyAuth) against Entra ID.
+
+> **History:** the first deployment served `dist/` with nginx and was 100%
+> client-side. When saved runs became a requirement (versioned, named,
+> attributed — same model as structcalc), nginx was replaced by the FastAPI
+> process, which took over nginx's other three jobs: SPA fallback + caching,
+> security headers, and the EasyAuth tripwire. See "Persistence" below.
 
 This matches what Castillo already operates. Every web-facing app in the
 subscription is a Container App with its own resource group, its own registry, and
@@ -27,9 +34,9 @@ no CDN, and no Static Web App anywhere in the tenant.
 | Size | 0.25 vCPU / 0.5 GiB |
 | Auth | EasyAuth, single-tenant, staff security group |
 
-The app stays 100% client-side. The container only serves files — parsing,
-optimization and export all still happen in the browser, and no pile data leaves
-the user's machine.
+Parsing, optimization and export all still happen in the browser. The server
+never computes; it stores. Pile data leaves the user's machine only when they
+explicitly save a run.
 
 ## Why not Static Web Apps
 
@@ -56,19 +63,32 @@ subdomain per app, and nothing in the estate uses path-based routing.
 
 | File | What it does |
 |---|---|
-| `Dockerfile` | node:20-alpine build → `nginx-unprivileged` (UID 101, port 8080) |
-| `nginx/default.conf` | SPA fallback, cache policy, `/healthz`, EasyAuth tripwire |
-| `nginx/snippets/require-easyauth.conf` | fails closed if the auth sidecar is missing |
-| `nginx/snippets/security-headers.conf` | CSP allowing only the two Google Fonts hosts |
-| `nginx/denied.html` | 403 page with a working sign-out link |
-
-Cache policy matches Vite's output: `index.html` is `no-cache` (it names the
-content-hashed bundles, so a stale copy points at assets that no longer exist),
-`/assets/*` is `immutable` for a year.
+| `Dockerfile` | node:20-alpine build → `python:3.11-slim` + uvicorn (UID 1001, port 8000) |
+| `server/main.py` | run API, static `dist/` + SPA fallback, security headers, EasyAuth tripwire |
+| `server/store.py` | versioned run storage (gzipped snapshot BYTEA, integrity hashes, size guards) |
+| `server/auth.py` | identity from the EasyAuth sidecar headers; never fabricates a UPN |
 
 `/healthz` deliberately bypasses the tripwire — Container Apps probes hit the
 container port directly and carry no EasyAuth headers, so gating it would stop
 any revision reaching Healthy.
+
+## Persistence
+
+Runs live in a **dedicated PostgreSQL flexible server** `castillo-civil-db`
+(same trust-boundary reasoning as structcalc's dedicated server), database
+`civil`, wired via the container app secret `db-url` → `DATABASE_URL`. The
+server **refuses to start work without it** — with the var unset it raises
+rather than silently falling back to SQLite that would lose every run on the
+next revision. CI asserts the secret ref on every deploy.
+
+The saved payload is the entire session snapshot — inputs, constraints, solved
+results, anchors — because N-S/E-W corrections mutate results *after* the
+deterministic solve; a reopen must show the numbers that were on screen, not a
+re-solve. Snapshots are gzipped columnar JSON in BYTEA (a measured 200k-pile
+fleet is ~26 MB raw, under 1 MB compressed), SHA-256'd over the stored bytes,
+with decompression guards sized so nothing that saves can OOM the replica when
+reopened. Every save appends an immutable version; a stale `base_version_no`
+gets a 409, never a silent overwrite.
 
 ## Access control
 
@@ -91,16 +111,21 @@ contradicts the org's no-stored-secrets rule.
 
 Deploy = push to `main`. Roll back = point the app at an earlier SHA tag.
 
-The build job runs on every push and pull request; the Azure steps are skipped
-until the repo variables exist, so a broken build is caught even before the
-infrastructure does.
+The build job runs frontend build + server tests on every push and pull
+request; the Azure steps are skipped until the repo variables exist, so a
+broken build is caught even before the infrastructure does.
+
+The deploy step updates **ingress before the image**: default readiness probes
+hit the ingress target port, so flipping the image to uvicorn (8000) while
+ingress still pointed at nginx's 8080 would fail the new revision's activation
+and wedge the pipeline. After the one-time transition the ingress update is an
+idempotent re-assertion. CI also asserts the auth gate *and* the `db-url`
+secret ref on every deploy — both live in Azure config where nothing in the
+repo would notice them being dropped.
 
 ## Blocking on
 
-1. **Go-ahead to provision** — nothing exists in Azure yet.
-2. **One DNS record**, added by the user in Squarespace once the app exists:
-   a `CNAME` at `civiltools` pointing to the container app's ingress FQDN.
-   No `asuid` TXT is needed — `qc.` and `pmo360.` both validated by CNAME alone
-   and neither has one.
-3. The `SG-Castillo-Internal-Apps` security group, and an owner for its
-   membership.
+**One DNS record**, added by the user in Squarespace: a `CNAME` at `civiltools`
+pointing to `pile-optimizer.politerock-3764480f.eastus2.azurecontainerapps.io`.
+No `asuid` TXT is needed — `qc.` and `pmo360.` both validated by CNAME alone
+and neither has one. Everything else is provisioned and live.
