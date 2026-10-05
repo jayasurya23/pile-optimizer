@@ -3,8 +3,23 @@
 Terrain-following pile plan optimizer for utility-scale solar: N–S torque tube
 on flex joints. **Import an Excel file, adjust the sliders, export the results.**
 
-Fully client-side — no server, no upload. The pile data never leaves the
-browser, which is also why it deploys as static files.
+The optimization runs entirely in the browser — loading a file does not upload
+it. A small FastAPI back end serves the app and stores **saved runs** (named,
+versioned, attributed); pile data leave the browser only when a user presses
+*Save Run*.
+
+## Documentation
+
+| Document | For | Content |
+|---|---|---|
+| [`docs/Pile-Optimizer-User-Guide.docx`](docs/Pile-Optimizer-User-Guide.docx) | Engineers using the tool | Input preparation, the workspace, limits, reviewing results, corrections, export, saved runs, troubleshooting, known issues |
+| [`docs/Pile-Optimizer-Technical-Documentation.docx`](docs/Pile-Optimizer-Technical-Documentation.docx) | Developers, operators, reviewers | Architecture, optimization engine, data formats, API, security, build/deploy, operations, issue register |
+| [`docs/adr/`](docs/adr/README.md) | Maintainers | Architecture Decision Records (also Appendix A of the technical documentation) |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Operators | Hosting decision, persistence, access control, CI/CD |
+| [`docs/FINDINGS.md`](docs/FINDINGS.md) | Maintainers | Defects found while packaging v1.1, open items |
+
+**Known issue:** on the Profile tab, any tracker that is not a straight line
+blanks the page (K1 in the technical documentation's issue register).
 
 ## What it does
 
@@ -31,7 +46,7 @@ case-insensitive.
 |---|---|---|
 | `TrackerID` | yes | groups piles into a tracker row |
 | `Northing` | yes | ft |
-| `Easting` | no | ft — needed for E–W adjacency checks |
+| `Easting` | recommended | ft — needed for E–W adjacency checks; always include it (`.xlsx` fills in 0 when absent, `.csv` leaves it undefined) |
 | `ExistingGround` | yes | ft |
 | `MinReveal` | no | ft above EG — per-pile hard lower bound |
 | `MaxReveal` | no | ft above EG — per-pile hard upper bound |
@@ -56,22 +71,30 @@ template — regenerate with `python scripts/make_sample_data.py`.
 ## Local development
 
 ```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # -> dist/ (static, deploy anywhere)
+npm ci
+LOCAL_DEV_MODE=1 uvicorn server.main:app --port 8001   # API + SQLite; second terminal
+npm run dev      # http://localhost:5173 (proxies /api to :8001)
+npm run build    # -> dist/, served by the FastAPI container
+python -m pytest server/tests -q                       # needs: pip install -r server/requirements.txt pytest httpx
 ```
 
-Requires Node 18+. SheetJS comes from the vendor's own registry rather than the
-npm mirror (the npm copy is stale and carries advisories).
+Requires Node 18+ (CI and the Dockerfile use Node 20) and Python 3.11. SheetJS
+comes from the vendor's own registry (`cdn.sheetjs.com`) rather than the npm
+mirror (the npm copy is stale and carries advisories), so builds need outbound
+access to that host. `LOCAL_DEV_MODE=1` bypasses authentication and must never
+be set in a deployed environment.
 
 ## Deployment
 
-`npm run build` emits a self-contained `dist/` — plain static files, no runtime.
-`vite.config.js` sets `base: "./"` so the same build works from any sub-path
-without rebuilding.
+`npm run build` emits a self-contained `dist/` of static files. In production
+the Docker image serves it from the FastAPI process (`server/`), which also
+exposes `/api/runs` for saved runs; the container runs on Azure Container Apps
+behind Entra ID. `vite.config.js` sets `base: "./"` so the same build works from
+any sub-path without rebuilding.
 
 See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for how this sits alongside the
-structural tool on one Castillo site behind Entra ID.
+structural tool on one Castillo site behind Entra ID, and the technical
+documentation for the architecture, API and operations.
 
 ## Changes from the v1.1 source
 

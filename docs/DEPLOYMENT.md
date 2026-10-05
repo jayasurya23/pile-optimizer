@@ -93,7 +93,8 @@ gets a 409, never a silent overwrite.
 ## Access control
 
 The gate is **not** in this repo. It is an Entra security group checked by the
-Container Apps auth sidecar (`jwtClaimChecks.allowedGroups`). The nginx tripwire
+Container Apps auth sidecar (`jwtClaimChecks.allowedGroups`). The tripwire (now
+middleware in `server/main.py`; it was nginx's job before the FastAPI backend)
 only fails closed if that sidecar is removed from the request path, and matches
 on header *presence*, never value. The reasoning — including why a
 `@castillope.com` domain check is unsafe as the gate — is in
