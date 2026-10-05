@@ -1,4 +1,4 @@
-# ADR-0015: PostgreSQL in production, SQLite for local development only; refuse to run without DATABASE_URL
+# ADR-0015: PostgreSQL in production, SQLite for local development only; no silent fallback without DATABASE_URL
 
 | | |
 |---|---|
@@ -14,7 +14,7 @@ Container filesystems are ephemeral. SQLite inside the container "would 'work' a
 
 Production uses a dedicated PostgreSQL flexible server, `castillo-civil-db`, database `civil`, reached through the container-app secret `db-url` exposed as `DATABASE_URL`. A dedicated server follows the same trust-boundary reasoning as `structcalc`'s.
 
-In `engine()`, a missing `DATABASE_URL` raises `RuntimeError` unless `LOCAL_DEV_MODE` is set, in which case SQLite (`CIVIL_SQLITE_PATH`, default `civil.db`) is used. Tables are created on first use (`create_all`). The PostgreSQL pool is 3 connections plus 2 overflow with a 10 s timeout, pre-ping and a 30-minute recycle. CI asserts the secret reference on every deploy.
+In `engine()`, a missing `DATABASE_URL` raises `RuntimeError` unless `LOCAL_DEV_MODE` is set, in which case SQLite (`CIVIL_SQLITE_PATH`, default `civil.db`) is used. The engine is created lazily on the first database call, so the process still starts and `/healthz` stays up; every database-backed request then fails with HTTP 500 instead of quietly writing to a local file. Tables are created on first use (`create_all`). The PostgreSQL pool is 3 connections plus 2 overflow with a 10 s timeout, pre-ping and a 30-minute recycle. CI asserts the secret reference on every deploy.
 
 ## Options considered
 

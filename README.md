@@ -18,8 +18,10 @@ versioned, attributed); pile data leave the browser only when a user presses
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Operators | Hosting decision, persistence, access control, CI/CD |
 | [`docs/FINDINGS.md`](docs/FINDINGS.md) | Maintainers | Defects found while packaging v1.1, open items |
 
-**Known issue:** on the Profile tab, any tracker that is not a straight line
-blanks the page (K1 in the technical documentation's issue register).
+**Known issue:** after N–S or E–W corrections the exported *Tube Slope*, *Slope
+Delta* and *Solution Type* are not recalculated, so they can disagree with the
+exported tops (K13 in the technical documentation's issue register). The other
+open items are listed there and in the User Guide.
 
 ## What it does
 

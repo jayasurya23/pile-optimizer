@@ -22,7 +22,7 @@ The same records are reproduced as Appendix A of `docs/Pile-Optimizer-Technical-
 | [0012](0012-append-only-run-versions.md) | Persist runs as append-only versions with optimistic concurrency | Accepted | 2026-08-14 |
 | [0013](0013-snapshot-storage-format.md) | Store snapshots as gzipped columnar JSON in the database, hashed over the stored bytes, with size guards | Accepted | 2026-08-14 |
 | [0014](0014-save-results-and-hydrate.md) | Save the solved results with the inputs; reopen without re-solving | Accepted | 2026-08-14 |
-| [0015](0015-postgresql-fail-closed.md) | PostgreSQL in production, SQLite for local development only; refuse to run without DATABASE_URL | Accepted | 2026-08-14 |
+| [0015](0015-postgresql-fail-closed.md) | PostgreSQL in production, SQLite for local development only; no silent fallback without DATABASE_URL | Accepted | 2026-08-14 |
 
 ## How this log works
 

@@ -18,7 +18,7 @@ Export `TrackerOptimization_Results.xlsx` with three sheets:
 - **Tracker Ends**: TrackerID, North Pile TOP, South Pile TOP.
 - **Design Parameters**: target, minimum and maximum reveal, maximum tube slope and slope delta, run date, totals, and counts by solution class.
 
-Solution classes are exported through `classifyMethod`: Straight Line, Optimized (no regrade), Needs Regrade. Tube Slope and Slope Delta are always written when defined, because they are the governing geometry checks.
+The solution class is derived through `classifyMethod`. The **Solution Type** column carries it per tracker as Straight Line, Terrain Following or Terrain Following (Regrade); Design Parameters counts the same three classes as Straight Line, Optimized (no regrade) and Needs Regrade. Tube Slope and Slope Delta are always written when defined, because they are the governing geometry checks.
 
 ## Options considered
 
@@ -37,6 +37,7 @@ No alternatives are recorded.
 - The header fill and banded rows set in code use a SheetJS Pro feature and are ignored by the Community Edition build, so they do not appear (`FINDINGS.md` section 5).
 - Design Parameters records the reveal and tube limits but not the adjacency limits, the grading preference, or whether per-pile limits were used. Slope values are rounded to 0.1 % there.
 - The help text inside the app still says the workbook has two sheets.
+- Tube Slope, Slope Delta and the solution class come from the solver and are not refreshed by N–S or E–W corrections, while the tops, reveals and cut/fill are. After corrections the exported slopes can disagree with the exported tops (verified: two rows with an 8 ft step, after Apply N-S the tops gave 5.1 % and 6.0 % slopes while Tube Slope still read 0.002 % and Solution Type still read Terrain Following; issue K13).
 
 ## Evidence
 

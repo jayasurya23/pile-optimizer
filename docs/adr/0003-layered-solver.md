@@ -40,7 +40,7 @@ No alternative algorithms are recorded. Code comments do record three design fin
 
 - Each row uses dense matrices (cost grows with the square of the piles in a row), and up to 80 sweeps cover all rows. The global stage dominates run time.
 - The two stages emit different method labels ("Terrain Follow (...)" versus "Pile Plan (Global)" and "Requires Regrade"); `classifyMethod` maps them onto three buckets.
-- The interface keeps two result sets: the per-tracker `results` shown on the Profile, Slope and Piles tabs, and the site-wide `allResults` used by Fleet, Adjacency, export and saved runs. They can differ (from code review; not re-tested in a browser).
+- The interface keeps two result sets: the per-tracker `results` shown on the Profile, Slope and Piles tabs, and the site-wide `allResults` used by Fleet, Adjacency, export and saved runs. They can differ (reproduced in a browser: issue K2 in the Technical Documentation).
 - Tuning constants (penalty parameters, iteration caps, tolerances, margins) are embedded in code with limited rationale, and the engine has no automated tests.
 
 ## Evidence
