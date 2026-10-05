@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import RunBar from "./RunPanel.jsx";
+import ErrorBoundary from "./ErrorBoundary.jsx";
 const _reactShim = React;
 import * as XLSX from "xlsx";
 
@@ -639,6 +640,7 @@ function ExplanationCard({results}){
   const method=r.Method||"";
   const isSL=method==="StraightLine";
   const isTF=method==="Terrain Follow (No Grade)"||method==="Terrain Follow (w/ Grade)";
+  const isTF2=method==="Terrain Follow (No Grade)";
   const hasCF=r.TotalCut>0.001||r.TotalFill>0.001;
   return(
     <div style={{background:"#f5f5f5",border:"1px solid #bcbec0",borderRadius:8,padding:"14px 16px",marginBottom:14}}>
@@ -2446,6 +2448,7 @@ export default function App(){
 
           {/* Tab Body */}
           <div style={{flex:1,overflowY:"auto",padding:"14px 18px"}}>
+            <ErrorBoundary scope="tab" resetKey={`${activeTab}|${selectedTracker}`}>
 
             {activeTab==="chart"&&(
               <div>
@@ -3078,6 +3081,7 @@ export default function App(){
                 </div>
               </div>
             )}
+            </ErrorBoundary>
           </div>
         </div>
       </div>
